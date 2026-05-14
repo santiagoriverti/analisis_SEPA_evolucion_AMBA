@@ -50,3 +50,125 @@ Para cada combinación (sucursal, producto), se calcula el precio promedio del m
 
 ### Canasta de 30 productos por sucursal
 La canasta total resulta de la suma:
+Canasta = Σ (precio_promedio_mensual_producto × cantidad_mensual)
+
+para los 30 productos definidos. Si una sucursal no comercializa algún producto, se imputa con el promedio nacional de ese producto para preservar la comparabilidad.
+
+### Filtro de representatividad
+Solo se incluyen sucursales que reportan al menos 20 de los 30 productos propios, garantizando que la canasta no esté dominada por valores imputados.
+
+## Visualización geográfica
+
+### Mapa interactivo HTML (Folium)
+Mapa con todas las sucursales del país representadas como círculos coloreados según el valor de la canasta:
+
+- **Verde**: canasta más barata
+- **Rojo**: canasta más cara
+- Escala continua basada en los percentiles 5 y 95 de la distribución
+
+### Tooltip y popup detallado
+Al pasar el mouse sobre cada sucursal se muestra cadena + precio. Al hacer click se despliega un panel con:
+
+- Cadena y nombre de sucursal
+- Ubicación (barrio/localidad, provincia, región)
+- Canasta total destacada
+- Cantidad de productos propios vs imputados
+- **Tabla detallada de los 30 productos** agrupados por categoría (Lácteos, Almacén, Bebidas, Limpieza, Higiene, Snacks) con precio unitario, cantidad mensual y subtotal
+
+### Corrección cartográfica
+Las Islas Malvinas se muestran etiquetadas como "Islas Malvinas (ARG)" mediante un overlay sobre el tile base.
+
+---
+
+# 🧺 Canasta utilizada
+
+Mismos 30 productos que el análisis longitudinal del ICM-UADE, distribuidos en seis categorías:
+
+- **Lácteos** (5): leche entera, yogur, queso untable, manteca, leche chocolatada
+- **Almacén** (8): aceite, arroz, fideos, harina, yerba, café, galletitas, sal
+- **Bebidas** (5): gaseosa cola, gaseosa sin azúcar, agua saborizada, cerveza, vino
+- **Limpieza** (3): lavandina, detergente, limpiador
+- **Higiene** (7): shampoo, acondicionador, jabón, antitranspirante, hilo dental, toallas femeninas, papel higiénico
+- **Snacks** (2): confites de chocolate, snacks salados
+
+Cada producto tiene EAN, descripción, cantidad fija mensual y categoría.
+
+---
+
+# 📂 Inputs requeridos
+
+El notebook espera encontrar en `/content/`:
+
+```text
+/content/
+│
+├── 042026_pais_parte1COMPLETO.csv.gz     (días 1-15 del mes)
+├── 042026_pais_parte2COMPLETO.csv.gz     (días 16-30 del mes)
+│
+├── Maestro de Productos Interno.xlsx
+├── maestro_sucursales_completo.xlsx
+```
+
+---
+
+# 📤 Outputs generados
+
+- `mapa_canasta_pais_abril2026_detalle.html` — Mapa interactivo georreferenciado con detalle de productos por sucursal (~15-25 MB)
+- `ranking_cadenas_nacional.png` — Gráfico de ranking de cadenas a nivel nacional
+- `ranking_cadenas_amba.png` — Gráfico de ranking de cadenas en AMBA (CABA + PBA)
+
+---
+
+# 🔍 Verificación del mapeo de cadenas
+
+El proyecto incluye bloques de verificación que validan la consistencia del mapeo `(id_comercio, id_bandera) → cadena` mediante cinco checks:
+
+1. **Cantidad de sucursales por cadena** vs valores esperados del mercado real
+2. **Distribución geográfica** (La Anónima en Patagonia, Toledo en costa atlántica, etc.)
+3. **Coherencia económica del ranking de precios**
+4. **Ausencia de ubicaciones duplicadas** entre cadenas distintas
+5. **Productos que cada cadena no comercializa** (validación cualitativa)
+
+---
+
+# 📊 Hallazgos principales (abril 2026)
+
+- **1.829 sucursales** del país con canasta válida (≥20 productos propios de 30)
+- **Carrefour** y **Hipermercado Libertad** lideran el ranking de cadenas más baratas a nivel nacional
+- **Cooperativa Obrera** es la cadena más barata en AMBA, por su modelo de cooperativa de consumo
+- **La Anónima** y **Disco** son las más caras del país, esta última por su posicionamiento premium
+- La dispersión de precios entre cadenas es **menor en AMBA (5,4%) que a nivel nacional (12,1%)**, reflejando mayor competencia comercial en el área metropolitana
+
+---
+
+# ⚠️ Limitaciones
+
+- El análisis corresponde al **promedio mensual** del último mes vencido, no captura variaciones intra-mensuales
+- Las sucursales con **coordenadas inválidas** o fuera del territorio argentino son descartadas (~5% del total)
+- Los precios corresponden al precio de **góndola sin descuentos**; el gasto efectivo puede ser menor con promociones o medios de pago específicos
+- Algunas cadenas con muy pocos productos relevados (FULL, Easy, Mercado Libre) se filtran del análisis por no ser representativas del consumo masivo
+- La imputación de productos faltantes con el promedio nacional puede atenuar las diferencias reales entre sucursales con muy poca cobertura
+
+---
+
+# 🛠️ Stack técnico
+
+- **Python 3** ejecutado en Google Colab
+- **pandas** + **numpy** para procesamiento
+- **folium** + **branca** para el mapa interactivo HTML
+- **matplotlib** para gráficos de ranking
+- Tiempo de procesamiento: ~5-10 minutos en Colab gratuito
+
+---
+
+# 📚 Fuentes
+
+- **SEPA**: datos.produccion.gob.ar/dataset/sepa-precios — Ministerio de Economía de la Nación
+- **Marco normativo**: Resolución 12/2016 de la ex Secretaría de Comercio
+
+---
+
+# 👥 Autores
+
+INECO — Instituto de Economía, UADE  
+Santiago Riverti
